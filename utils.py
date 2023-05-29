@@ -61,7 +61,7 @@ def intent_classifier(user_prompt):
         messages=[
             {"role": "user", "content": prompt}
         ],
-        max_tokens=20
+        max_tokens=1024
     )
     intent = response['choices'][0]['message']['content']
     if intent.startswith("Category: "):

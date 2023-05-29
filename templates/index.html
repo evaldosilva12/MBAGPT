@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Interface</title>
+</head>
+<body>
+    <h1>Chatting with Multiple Data Sources</h1>
+
+    <form action="/process" method="post">
+        <input type="text" id="query" name="query" placeholder="e.g. 'How can I diversify my portfolio?'" required>
+        <input type="submit" value="Submit">
+    </form>
+
+    <div id="chat-history">
+        {% for message in chat_history %}
+            {% if message.is_user %}
+                <div class="user-message">
+                    <p>{{ message.message }}</p>
+                </div>
+            {% else %}
+                <div class="bot-message">
+                    <p>{{ message.message }}</p>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</body>
+</html>

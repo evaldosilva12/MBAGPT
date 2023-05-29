@@ -10,7 +10,7 @@ import openai
 # Set OpenAI API key
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-st.header("MBAGPT: Chatting with Multiple Data Sources")
+st.header("Chatting with Multiple Data Sources")
 
 # Initialize embeddings
 embeddings = OpenAIEmbeddings()
@@ -21,6 +21,9 @@ buffett_retriever = buffettDB.as_retriever(search_kwargs={"k": 3})
 
 bransonDB = Chroma(persist_directory=os.path.join('db', 'branson'), embedding_function=embeddings)
 branson_retriever = bransonDB.as_retriever(search_kwargs={"k": 3})
+
+webDB = Chroma(persist_directory=os.path.join('db', 'web'), embedding_function=embeddings)
+web_retriever = webDB.as_retriever(search_kwargs={"k": 3})
 
 
 # Initialize session state for chat history
@@ -54,6 +57,19 @@ def hormozi_handler(query):
     query_with_context = human_template.format(query=query, context=context)
 
     # Return formatted message
+    return {"role": "user", "content": query_with_context}
+
+def web_handler(query):
+    print("Using WEB handler...")
+    # Get relevant documents from Web's database
+    relevant_docs = web_retriever.get_relevant_documents(query)
+
+    # Use the provided function to prepare the context
+    context = get_page_contents(relevant_docs)
+
+    # Prepare the prompt for GPT-3.5-turbo with the context
+    query_with_context = human_template.format(query=query, context=context)
+
     return {"role": "user", "content": query_with_context}
 
 
@@ -94,7 +110,7 @@ def other_handler(query):
 # Function to route query to correct handler based on category
 def route_by_category(query, category):
     if category == "0":
-        return hormozi_handler(query)
+        return web_handler(query)
     elif category == "1":
         return buffet_handler(query)
     elif category == "2":
@@ -146,7 +162,7 @@ def generate_response():
 # Take user input
 st.text_input("Enter your prompt:",
               key="prompt",
-              placeholder="e.g. 'How can I diversify my portfolio?'",
+              placeholder="e.g. 'How can I make an appointment?'",
               on_change=generate_response
               )
 
