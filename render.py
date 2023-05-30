@@ -14,7 +14,7 @@ bot_msg_container_html_template = '''
 '''
 
 user_msg_container_html_template = '''
-<div style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
+<div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
     <div style="width: 78%">
         $MSG
     </div>

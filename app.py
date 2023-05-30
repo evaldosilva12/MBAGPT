@@ -1,34 +1,35 @@
-import os
+from flask import Flask, request, jsonify, render_template, session
+from flask_session import Session
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
-import streamlit as st
 from utils import intent_classifier, semantic_search, ensure_fit_tokens, get_page_contents
 from prompts import human_template, system_message
 from render import user_msg_container_html_template, bot_msg_container_html_template
 import openai
+import os
+
+app = Flask(__name__)
+
+# Set the secret key to sign the session cookie and use the filesystem session interface
+app.secret_key = os.urandom(24)
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 # Set OpenAI API key
-openai.api_key = st.secrets["OPENAI_API_KEY"]
-
-st.header("Chatting with Multiple Data Sources")
+openai.api_key = "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"
 
 # Initialize embeddings
 embeddings = OpenAIEmbeddings()
 
-# Load the Buffett and Branson databases
-buffettDB = Chroma(persist_directory=os.path.join('db', 'buffett'), embedding_function=embeddings)
-buffett_retriever = buffettDB.as_retriever(search_kwargs={"k": 3})
-
-bransonDB = Chroma(persist_directory=os.path.join('db', 'branson'), embedding_function=embeddings)
-branson_retriever = bransonDB.as_retriever(search_kwargs={"k": 3})
+# Load the databases
+pdfDB = Chroma(persist_directory=os.path.join('db', 'pdf'), embedding_function=embeddings)
+pdf_retriever = pdfDB.as_retriever(search_kwargs={"k": 3})
 
 webDB = Chroma(persist_directory=os.path.join('db', 'web'), embedding_function=embeddings)
 web_retriever = webDB.as_retriever(search_kwargs={"k": 3})
 
-
-# Initialize session state for chat history
-if "history" not in st.session_state:
-    st.session_state.history = []
+# Initialize session history (in this case, a global variable)
+history = []
 
 # Construct messages from chat history
 def construct_messages(history):
@@ -45,20 +46,6 @@ def construct_messages(history):
 
 
 # Define handler functions for each category
-def hormozi_handler(query):
-    print("Using Hormozi handler...")
-    # Perform semantic search and format results
-    search_results = semantic_search(query, top_k=3)
-    context = ""
-    for i, (title, snippet) in enumerate(search_results):
-        context += f"Snippet from: {title}\n {snippet}\n\n"
-
-    # Generate human prompt template and convert to API message format
-    query_with_context = human_template.format(query=query, context=context)
-
-    # Return formatted message
-    return {"role": "user", "content": query_with_context}
-
 def web_handler(query):
     print("Using WEB handler...")
     # Get relevant documents from Web's database
@@ -72,25 +59,10 @@ def web_handler(query):
 
     return {"role": "user", "content": query_with_context}
 
-
-def buffett_handler(query):
-    print("Using Buffett handler...")
-    # Get relevant documents from Buffett's database
-    relevant_docs = buffett_retriever.get_relevant_documents(query)
-
-    # Use the provided function to prepare the context
-    context = get_page_contents(relevant_docs)
-
-    # Prepare the prompt for GPT-3.5-turbo with the context
-    query_with_context = human_template.format(query=query, context=context)
-
-    return {"role": "user", "content": query_with_context}
-
-
-def branson_handler(query):
-    print("Using Branson handler...")
-    # Get relevant documents from Branson's database
-    relevant_docs = branson_retriever.get_relevant_documents(query)
+def pdf_handler(query):
+    print("Using PDF handler...")
+    # Get relevant documents from PDF's database
+    relevant_docs = pdf_retriever.get_relevant_documents(query)
 
     # Use the provided function to prepare the context
     context = get_page_contents(relevant_docs)
@@ -102,7 +74,7 @@ def branson_handler(query):
 
 
 def other_handler(query):
-    print("Using other handler...")
+    print("Using ChatGPT handler...")
     # Return the query in the appropriate message format
     return {"role": "user", "content": query}
 
@@ -112,9 +84,7 @@ def route_by_category(query, category):
     if category == "0":
         return web_handler(query)
     elif category == "1":
-        return buffet_handler(query)
-    elif category == "2":
-        return branson_handler(query)
+        return pdf_handler(query)
     elif category == "3":
         return other_handler(query)
     else:
@@ -159,16 +129,66 @@ def generate_response():
     })
 
 
-# Take user input
-st.text_input("Enter your prompt:",
-              key="prompt",
-              placeholder="e.g. 'How can I make an appointment?'",
-              on_change=generate_response
-              )
+@app.route("/", methods=["GET", "POST"])
+def index():
+    # Initialize history in session if it doesn't exist
+    if 'history' not in session:
+        session['history'] = []
 
-# Display chat history
-for message in st.session_state.history:
-    if message["is_user"]:
-        st.write(user_msg_container_html_template.replace("$MSG", message["message"]), unsafe_allow_html=True)
-    else:
-        st.write(bot_msg_container_html_template.replace("$MSG", message["message"]), unsafe_allow_html=True)
+    if request.method == "POST":
+        # Append user's query to history
+        session['history'].append({
+            "message": request.form['prompt'],
+            "is_user": True
+    })
+
+        # Classify the intent
+        category = intent_classifier(request.form['prompt'])
+
+        # Route the query based on category
+        new_message = route_by_category(request.form['prompt'], category)
+
+        # Construct messages from chat history
+        messages = construct_messages(session['history'])
+
+        # Add the new_message to the list of messages before sending it to the API
+        messages.append(new_message)
+
+        # Ensure total tokens do not exceed model's limit
+        messages = ensure_fit_tokens(messages)
+
+        # Call the Chat Completions API with the messages
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages
+        )
+
+        # Extract the assistant's message from the response
+        assistant_message = response['choices'][0]['message']['content']
+
+        # Append assistant's message to history
+        session['history'].append({
+            "message": assistant_message,
+            "is_user": False
+        })
+
+        # Save changes to session
+        session.modified = True
+
+        return jsonify({"history": session['history']})
+
+    return render_template("index.html", history=session['history'])
+
+@app.route("/get_history", methods=["GET"])
+def get_history():
+    return jsonify({"history": session.get('history', [])})
+
+
+@app.route("/clear_history", methods=["POST"])
+def clear_history():
+    session['history'].clear()
+    session.modified = True
+    return jsonify({"success": True})
+
+if __name__ == "__main__":
+    app.run(debug=True)
