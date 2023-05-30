@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Chat with Multiple Data Sources</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -24,7 +25,7 @@
             flex-direction: column;
             align-items: center;
         }
-   
+
         #user_prompt_form input[type="submit"],
         #user_prompt_form button {
             margin-top: 10px;
@@ -33,7 +34,7 @@
 
         #user_prompt_form button {
             margin-left: 40px;
-        }        
+        }
 
         #chat_history {
             margin-bottom: 220px;
@@ -57,29 +58,77 @@
             cursor: pointer;
             border-radius: 5px;
             outline: none;
-        }        
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .occupied {
+            background-color: red;
+            color: white;
+        }
+
+        .free {
+            background-color: green;
+            color: white;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 0 5px;
+            font-size: 14px;
+            font-weight: normal;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .button-free {
+            background-color: green;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
-    <h1 style="text-align: center;">XYZ Bot</h1>
+    <h1 style="text-align: center">XYZ Bot</h1>
 
     <div id="chat_history">
         <!-- This will be populated with chat history from the JavaScript -->
     </div>
 
-    <div id="typing_indicator" style="display: none; justify-content: center;">
+    <div id="typing_indicator" style="display: none; justify-content: center">
         <div>
-            <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png" style="max-height: 50px; max-width: 50px; border-radius: 50%;">
+            <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png"
+                style="max-height: 50px; max-width: 50px; border-radius: 50%" />
         </div>
         <div>
-            <img src="https://cdn.dribbble.com/users/359314/screenshots/2379673/untitled-3.gif" style="height: 50px;">
-        </div>                                        
+            <img src="https://cdn.dribbble.com/users/359314/screenshots/2379673/untitled-3.gif" style="height: 50px" />
+        </div>
     </div>
 
     <form id="user_prompt_form">
-        <textarea name="prompt" id="user_prompt" rows="4" cols="50" placeholder="e.g. 'How can I make an appointment?'"></textarea>
+        <textarea name="prompt" id="user_prompt" rows="4" cols="50"
+            placeholder="e.g. 'How can I make an appointment?'"></textarea>
         <div>
-            <input type="submit" value="Send">
+            <input type="submit" value="Send" />
             <button type="button" id="clear_history_button">Clear Chat</button>
         </div>
     </form>
@@ -87,9 +136,35 @@
     <button id="scroll_down_button">&#8595;</button>
 
     <script>
+        function showConfirmation(date, hour) {
+            var confirmationMessage = 'Can we proceed and confirm your appointment for the respective date and hour:\n' +
+            date + ' - ' + hour;
+            var userResponse = confirm(confirmationMessage);
+            if (userResponse) {
+                // User clicked "Yes"
+                alert("Appointment confirmed! Thank you.");
+                $("#user_prompt").val("<b>Appointment:</b> " + date + ' - ' + hour);
+                $("#user_prompt_form").submit();
+
+                // Split the hour into start and end times
+                var times = hour.split(' - ');
+                var time_start = times[0].replace(':', '');
+                var time_end = times[1].replace(':', '');
+
+                // Format the date for the .ics file
+                var formatted_date = date.replace(/\//g, '');
+
+                // Send a POST request to the server
+                $.post("/confirm", { date: formatted_date, time_start: time_start, time_end: time_end });
+            } else {
+                // User clicked "No" or closed the alert box
+                alert("Appointment canceled.");
+            }
+        }
+
         function renderChatHistory(history) {
-            var chat_history = document.getElementById('chat_history');
-            chat_history.innerHTML = '';
+            var chat_history = document.getElementById("chat_history");
+            chat_history.innerHTML = "";
 
             // for each message, add it to the chat container
             for (var i = 0; i < history.length; i++) {
@@ -120,42 +195,45 @@
                     `;
                 }
 
-                chat_history.innerHTML += message_template.replace('$MSG', item.message);
+                chat_history.innerHTML += message_template.replace(
+                    "$MSG",
+                    item.message
+                );
             }
-                // Scroll to the bottom of the chat history
-                chat_history.scrollTop = chat_history.scrollHeight;            
+            // Scroll to the bottom of the chat history
+            chat_history.scrollTop = chat_history.scrollHeight;
         }
 
         function toggleScrollDownButton() {
             var scrollPos = $(window).scrollTop();
             var windowHeight = $(window).height();
             if (scrollPos + windowHeight < $(document).height() - 80) {
-                $('#scroll_down_button').fadeIn();
+                $("#scroll_down_button").fadeIn();
             } else {
-                $('#scroll_down_button').fadeOut();
+                $("#scroll_down_button").fadeOut();
             }
         }
 
         $(document).ready(function () {
-            $('#user_prompt_form').on('submit', function (e) {
+            $("#user_prompt_form").on("submit", function (e) {
                 e.preventDefault();
 
                 $.ajax({
-                    type: 'POST',
-                    url: '/',
+                    type: "POST",
+                    url: "/",
                     data: $(this).serialize(),
                     beforeSend: function () {
-                        $('#typing_indicator').fadeIn();
-                        $('#typing_indicator').css('display', 'flex');
+                        $("#typing_indicator").fadeIn();
+                        $("#typing_indicator").css("display", "flex");
                     },
                     complete: function () {
-                        $('#typing_indicator').css('display', 'none');
-                        $('#typing_indicator').fadeOut();
+                        $("#typing_indicator").css("display", "none");
+                        $("#typing_indicator").fadeOut();
                     },
                     success: function (data) {
-                        let chat_history = document.getElementById('chat_history');
-                        chat_history.innerHTML = '';
-                        $('#user_prompt').val('');
+                        let chat_history = document.getElementById("chat_history");
+                        chat_history.innerHTML = "";
+                        $("#user_prompt").val("");
 
                         data.history.forEach(function (item) {
                             let message_template;
@@ -184,75 +262,77 @@
                                 `;
                             }
 
-                            chat_history.innerHTML += message_template.replace('$MSG', item.message);
+                            chat_history.innerHTML += message_template.replace(
+                                "$MSG",
+                                item.message
+                            );
                         });
 
-                        var scrollPos = $('body').height() - ($(window).height() - 240);
-                        $('html, body').animate({ scrollTop: scrollPos }, 1000);
-                    }
+                        var scrollPos = $("body").height() - ($(window).height() - 240);
+                        $("html, body").animate({ scrollTop: scrollPos }, 1000);
+                    },
                 });
             });
-            $('#clear_history_button').on('click', function () {
+            $("#clear_history_button").on("click", function () {
                 $.ajax({
-                    type: 'POST',
-                    url: '/clear_history',
+                    type: "POST",
+                    url: "/clear_history",
                     success: function (data) {
                         if (data.success) {
-                            $('#chat_history').empty();
+                            $("#chat_history").empty();
                             location.reload();
                         }
-                    }
+                    },
                 });
-            });           
-        
+            });
+
             $.ajax({
-                url: '/get_history',
-                type: 'GET',
-                success: function(response) {
+                url: "/get_history",
+                type: "GET",
+                success: function (response) {
                     // If the server's chat history is empty, add an initial bot message
                     if (response.history.length === 0) {
                         var initialBotMessage = {
                             is_user: false,
-                            message: "How can I help you?"
+                            message: "How can I help you?",
                         };
                         response.history.push(initialBotMessage);
-                    }   
+                    }
 
-                    $('#typing_indicator').fadeIn();
-                    $('#typing_indicator').css('display', 'flex');
+                    $("#typing_indicator").fadeIn();
+                    $("#typing_indicator").css("display", "flex");
 
-                    setTimeout(function() {
-                        $('#typing_indicator').fadeOut();
+                    setTimeout(function () {
+                        $("#typing_indicator").fadeOut();
                         renderChatHistory(response.history);
-                        $('#chat_history').scrollTop($('#chat_history')[0].scrollHeight);
+                        $("#chat_history").scrollTop($("#chat_history")[0].scrollHeight);
                         // Scroll to the very bottom of the page
-                        var scrollPos = $('body')[0].scrollHeight;
-                        $('html, body').animate({ scrollTop: scrollPos }, 1000);                        
+                        var scrollPos = $("body")[0].scrollHeight;
+                        $("html, body").animate({ scrollTop: scrollPos }, 1000);
                     }, 2000);
                 },
-                error: function(error) {
+                error: function (error) {
                     console.log(error);
-                }
-            });        
-        
+                },
+            });
 
             $(window).scroll(function () {
                 toggleScrollDownButton();
             });
 
-            $('#scroll_down_button').click(function () {
-                $('html, body').animate({ scrollTop: $(document).height() }, 500);
-            });            
-
-            // Submit form on Enter key press in textarea
-            $('#user_prompt').on('keydown', function (e) {
-                if (e.keyCode === 13 && !e.shiftKey) {
-                    e.preventDefault();
-                    $('#user_prompt_form').submit();
-                }
+            $("#scroll_down_button").click(function () {
+                $("html, body").animate({ scrollTop: $(document).height() }, 500);
             });
 
+            // Submit form on Enter key press in textarea
+            $("#user_prompt").on("keydown", function (e) {
+                if (e.keyCode === 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    $("#user_prompt_form").submit();
+                }
+            });
         });
     </script>
 </body>
+
 </html>

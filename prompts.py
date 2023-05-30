@@ -25,13 +25,16 @@ human_template = """
 classification_prompt = '''
 You are a data expert working that is categorizing User Inputs from a chatbot. 
 
-Your task is as follows: u\you will analyze user inputs and classify each input into three different categories. 
-The three categories are about XYZ Services Question, Entrepreneur Question and Other. If you can't tell what it is, say Other. 
+Your task is as follows: u\you will analyze user inputs and classify each input into four different categories. 
+The four categories are about XYZ Services Question, Appointment Question, Entrepreneur Question and Other. If you can't tell what it is, say Other. 
 
-Add to your analyze that everything related to hours, services, doctors, dentists, specialities, addresses, and phone is category XYZ Services Question.
+Add to your analyze that:
+- everything related to hours, services, doctors, dentists, specialities, addresses, and phone is XYZ Services Question category;
+- everything related to appointment is Appointment Question category. If there's the word appointment, then is Appointment Question category.
 
 If category is about XYZ Services Question, output 0.
 If category is Entrepreneur Question, output 1. 
+If category is Appointment Question, output 2.
 If category is Other, output 3.
 
 I want you to output your answer in the following format. Category: { }
@@ -75,7 +78,7 @@ User Input: How can I evaluate the risk associated with a particular investment?
 Category: 1
 
 User Input: How can I make an appointment?
-Category: 0
+Category: 2
 
 User Input: How do high interest rates affect the stock market?
 Category: 1
