@@ -13,25 +13,51 @@
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: #b7b7b7;
-            padding: 10px;
+            background: linear-gradient(#ffffff, #bbbbbb);
+            padding: 20px 0;
             margin: 0;
             display: flex;
             flex-direction: row;
             justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 0px;
+            flex-direction: column;
+            align-items: center;
+        }
+   
+        #user_prompt_form input[type="submit"],
+        #user_prompt_form button {
+            margin-top: 10px;
+            width: 150px;
         }
 
+        #user_prompt_form button {
+            margin-left: 40px;
+        }        
+
         #chat_history {
-            margin-bottom: 150px;
+            margin-bottom: 220px;
         }
 
         #typing_indicator {
             position: fixed;
-            bottom: 60px;
+            bottom: 150px;
             width: 100%;
         }
+
+        #scroll_down_button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #afaeae;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+        }        
     </style>
 </head>
 <body>
@@ -51,10 +77,14 @@
     </div>
 
     <form id="user_prompt_form">
-        <input type="text" name="prompt" id="user_prompt" placeholder="e.g. 'How can I make an appointment?'">
-        <input type="submit" value="Send">
-        <button type="button" id="clear_history_button">Clear Chat</button>
+        <textarea name="prompt" id="user_prompt" rows="4" cols="50" placeholder="e.g. 'How can I make an appointment?'"></textarea>
+        <div>
+            <input type="submit" value="Send">
+            <button type="button" id="clear_history_button">Clear Chat</button>
+        </div>
     </form>
+
+    <button id="scroll_down_button">&#8595;</button>
 
     <script>
         function renderChatHistory(history) {
@@ -69,12 +99,12 @@
                 if (item.is_user) {
                     message_template = `
                         <div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
-                            <div style="width: 78%">
-                                $MSG
-                            </div>
                             <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
                                 <img src="https://wilcity.com/wp-content/uploads/2020/06/115-1150152_default-profile-picture-avatar-png-green.jpg" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
-                            </div>    
+                            </div>
+                            <div style="width: 80%">
+                                $MSG
+                            </div>  
                         </div>
                     `;
                 } else {
@@ -92,8 +122,19 @@
 
                 chat_history.innerHTML += message_template.replace('$MSG', item.message);
             }
+                // Scroll to the bottom of the chat history
+                chat_history.scrollTop = chat_history.scrollHeight;            
         }
 
+        function toggleScrollDownButton() {
+            var scrollPos = $(window).scrollTop();
+            var windowHeight = $(window).height();
+            if (scrollPos + windowHeight < $(document).height() - 80) {
+                $('#scroll_down_button').fadeIn();
+            } else {
+                $('#scroll_down_button').fadeOut();
+            }
+        }
 
         $(document).ready(function () {
             $('#user_prompt_form').on('submit', function (e) {
@@ -122,12 +163,12 @@
                             if (item.is_user) {
                                 message_template = `
                                     <div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
-                                        <div style="width: 78%">
-                                            $MSG
-                                        </div>
                                         <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
                                             <img src="https://wilcity.com/wp-content/uploads/2020/06/115-1150152_default-profile-picture-avatar-png-green.jpg" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
-                                        </div>    
+                                        </div>  
+                                        <div style="width: 80%">
+                                            $MSG
+                                        </div>  
                                     </div>
                                 `;
                             } else {
@@ -146,7 +187,7 @@
                             chat_history.innerHTML += message_template.replace('$MSG', item.message);
                         });
 
-                        var scrollPos = $('body').height() - ($(window).height() - 150);
+                        var scrollPos = $('body').height() - ($(window).height() - 240);
                         $('html, body').animate({ scrollTop: scrollPos }, 1000);
                     }
                 });
@@ -183,6 +224,10 @@
                     setTimeout(function() {
                         $('#typing_indicator').fadeOut();
                         renderChatHistory(response.history);
+                        $('#chat_history').scrollTop($('#chat_history')[0].scrollHeight);
+                        // Scroll to the very bottom of the page
+                        var scrollPos = $('body')[0].scrollHeight;
+                        $('html, body').animate({ scrollTop: scrollPos }, 1000);                        
                     }, 2000);
                 },
                 error: function(error) {
@@ -190,6 +235,23 @@
                 }
             });        
         
+
+            $(window).scroll(function () {
+                toggleScrollDownButton();
+            });
+
+            $('#scroll_down_button').click(function () {
+                $('html, body').animate({ scrollTop: $(document).height() }, 500);
+            });            
+
+            // Submit form on Enter key press in textarea
+            $('#user_prompt').on('keydown', function (e) {
+                if (e.keyCode === 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    $('#user_prompt_form').submit();
+                }
+            });
+
         });
     </script>
 </body>

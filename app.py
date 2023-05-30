@@ -6,6 +6,7 @@ from utils import intent_classifier, semantic_search, ensure_fit_tokens, get_pag
 from prompts import human_template, system_message
 from render import user_msg_container_html_template, bot_msg_container_html_template
 import openai
+import streamlit as st
 import os
 
 app = Flask(__name__)
@@ -16,7 +17,8 @@ app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
 # Set OpenAI API key
-openai.api_key = "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"
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+
 
 # Initialize embeddings
 embeddings = OpenAIEmbeddings()
