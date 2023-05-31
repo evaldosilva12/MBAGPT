@@ -11,6 +11,8 @@ import os
 from datetime import datetime
 import glob
 from flask import Flask, send_from_directory
+from scrap import scrape_webpage
+
 
 
 
@@ -323,6 +325,21 @@ END:VCALENDAR
 @app.route('/event_folder/<path:filename>')
 def custom_static(filename):
     return send_from_directory('./event_folder', filename)
+
+
+@app.route('/scrape/<path:url>', methods=['GET'])
+def scrape(url):
+    try:
+        result = scrape_webpage(url)
+        with open('scrapped/data.txt', 'w') as f:
+            f.write(result)
+        return jsonify({'message': 'Scraping successful', 'data': 'Data written to file'})
+    except Exception as e:
+        return jsonify({'message': 'An error occurred during scraping', 'error': str(e)})
+
+@app.route('/sample')
+def sample():
+    return render_template('sample.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
