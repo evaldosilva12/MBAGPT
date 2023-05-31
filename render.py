@@ -4,23 +4,13 @@ import re
 
 bot_msg_container_html_template = '''
 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
-    <div style="width: 20%; display: flex; justify-content: center">
-        <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png" style="max-height: 50px; max-width: 50px; border-radius: 50%;">
-    </div>
-    <div style="width: 80%;">
-        $MSG
-    </div>
+aaaaaaaaa
 </div>
 '''
 
 user_msg_container_html_template = '''
 <div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
-    <div style="width: 78%">
-        $MSG
-    </div>
-    <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
-        <img src="https://wilcity.com/wp-content/uploads/2020/06/115-1150152_default-profile-picture-avatar-png-green.jpg" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
-    </div>    
+uuuuuuuuu
 </div>
 '''
 
