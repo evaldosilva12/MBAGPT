@@ -14,7 +14,7 @@
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: linear-gradient(#ffffff, #bbbbbb);
+            background: linear-gradient(#ffffff, #bccfcc);
             padding: 20px 0;
             margin: 0;
             display: flex;
@@ -29,7 +29,7 @@
         #user_prompt_form input[type="submit"],
         #user_prompt_form button {
             margin-top: 10px;
-            width: 150px;
+            font-family: system-ui;
         }
 
         #user_prompt_form button {
@@ -38,6 +38,7 @@
 
         #chat_history {
             margin-bottom: 220px;
+            font-family: system-ui;
         }
 
         #typing_indicator {
@@ -48,13 +49,13 @@
 
         #scroll_down_button {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 15px;
+            right: -10px;
             display: none;
             background-color: #afaeae;
             color: #ffffff;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 15px;
             cursor: pointer;
             border-radius: 5px;
             outline: none;
@@ -62,6 +63,7 @@
 
         table {
             border-collapse: collapse;
+            margin-left: -60px;
         }
 
         th,
@@ -86,11 +88,9 @@
 
         .button {
             display: inline-block;
-            padding: 6px 12px;
-            margin: 0 5px;
-            font-size: 14px;
-            font-weight: normal;
-            line-height: 1.42857143;
+            padding: 2px 4px;
+            margin: 2px;
+            font-size: small;
             text-align: center;
             white-space: nowrap;
             vertical-align: middle;
@@ -104,11 +104,27 @@
             background-color: green;
             color: white;
         }
+
+        ::-webkit-scrollbar {
+        width: 10px; /* Width of the scrollbar */
+        }
+
+        ::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Color of the track */
+        }
+
+        ::-webkit-scrollbar-thumb {
+        background: #888; /* Color of the scrollbar thumb */
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+        background: #555; /* Color of the scrollbar thumb on hover */
+        }        
     </style>
 </head>
 
 <body>
-    <h1 style="text-align: center">XYZ Bot</h1>
+    <h2 style="text-align: center;font-family: system-ui;">Chat with Mediz Dental</h2>
 
     <div id="chat_history">
         <!-- This will be populated with chat history from the JavaScript -->
@@ -116,8 +132,7 @@
 
     <div id="typing_indicator" style="display: none; justify-content: center">
         <div>
-            <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png"
-                style="max-height: 50px; max-width: 50px; border-radius: 50%" />
+            <img src="{{ url_for('static', filename='img/bot-profile.png') }}" style="max-height: 50px; max-width: 50px; border-radius: 50%" />
         </div>
         <div>
             <img src="https://cdn.dribbble.com/users/359314/screenshots/2379673/untitled-3.gif" style="height: 50px" />
@@ -125,9 +140,9 @@
     </div>
 
     <form id="user_prompt_form">
-        <textarea name="prompt" id="user_prompt" rows="4" cols="50"
+        <textarea name="prompt" id="user_prompt" rows="4" cols="35"
             placeholder="e.g. 'How can I make an appointment?'"></textarea>
-        <div>
+        <div style="display: flex;">
             <input type="submit" value="Send" />
             <button type="button" id="clear_history_button">Clear Chat</button>
         </div>
@@ -173,9 +188,9 @@
 
                 if (item.is_user) {
                     message_template = `
-                        <div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
+                        <div style='background-color: rgb(251 251 251);padding: 10px;margin-bottom: 10px;display: flex;border-top: 1px solid rgb(233 232 232);border-bottom: 1px solid rgb(233 232 232);align-items: center;'>
                             <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
-                                <img src="https://wilcity.com/wp-content/uploads/2020/06/115-1150152_default-profile-picture-avatar-png-green.jpg" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
+                                <img src="{{ url_for('static', filename='img/user-profile.png') }}" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
                             </div>
                             <div style="width: 80%">
                                 $MSG
@@ -186,7 +201,7 @@
                     message_template = `
                         <div id='bot_message' style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
                             <div style="width: 20%; display: flex; justify-content: center">
-                                <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png" style="max-height: 50px; max-width: 50px; border-radius: 50%;">
+                                <img src="{{ url_for('static', filename='img/bot-profile.png') }}" style="max-height: 50px; max-width: 50px; border-radius: 50%" />
                             </div>
                             <div style="width: 80%;">
                                 $MSG
@@ -240,9 +255,9 @@
 
                             if (item.is_user) {
                                 message_template = `
-                                    <div style='background-color: rgb(251 251 251);padding: 10px;border-radius: 5px;margin-bottom: 10px;display: flex;border: 1px solid rgb(233 232 232);align-items: center;'>
+                                    <div style='background-color: rgb(251 251 251);padding: 10px;margin-bottom: 10px;display: flex;border-top: 1px solid rgb(233 232 232);border-bottom: 1px solid rgb(233 232 232);align-items: center;'>
                                         <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
-                                            <img src="https://wilcity.com/wp-content/uploads/2020/06/115-1150152_default-profile-picture-avatar-png-green.jpg" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
+                                            <img src="{{ url_for('static', filename='img/user-profile.png') }}" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
                                         </div>  
                                         <div style="width: 80%">
                                             $MSG
@@ -253,7 +268,7 @@
                                 message_template = `
                                     <div id='bot_message' style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
                                         <div style="width: 20%; display: flex; justify-content: center">
-                                            <img src="https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-4096.png" style="max-height: 50px; max-width: 50px; border-radius: 50%;">
+                                            <img src="{{ url_for('static', filename='img/bot-profile.png') }}" style="max-height: 50px; max-width: 50px; border-radius: 50%" />
                                         </div>
                                         <div style="width: 80%;">
                                             $MSG

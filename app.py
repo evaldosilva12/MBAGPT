@@ -182,7 +182,7 @@ def index():
                 download_link = request.url_root + latest_file
                 
                 # If it does, set the assistant's message accordingly
-                assistant_message = f"Thanks for scheduling your appointment.<br>You can download your appointment file from <a href='{download_link}'>here</a>.<br><br>Could I help you with anything else?"
+                assistant_message = f"Hey, thanks for setting up your appointment! ✅<br><br>You can grab your appointment file (.ics) by clicking <a href='{download_link}'>here</a> 📅.<br><br>Need a hand with anything else? Just let me know!"
         else:
             # If it doesn't, proceed as before
             # Classify the intent
