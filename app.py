@@ -153,7 +153,7 @@ def generate_response():
     })
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/bot", methods=["GET", "POST"])
 def index():
     # Initialize history in session if it doesn't exist
     if 'history' not in session:
@@ -171,8 +171,8 @@ def index():
 
         # Check if the prompt starts with "Appointment:"
         if request.form['prompt'].startswith("<b>Appointment:</b>"):
-                # Get a list of all .ics files in the event_folder directory
-                list_of_files = glob.glob('./event_folder/*.ics')
+                # Get a list of all .ics files in the downloads directory
+                list_of_files = glob.glob('./downloads/*.ics')
                 
                 # Get the most recently created file
                 latest_file = max(list_of_files, key=os.path.getctime)
@@ -190,7 +190,7 @@ def index():
 
             if category == "2":
                 # For category 2 (Appointment handler), set the assistant message as the buttons HTML
-                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun/05</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun/06</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun/06\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun/06\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun/07</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
+                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun 05</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 06</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun 06\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun 06\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 07</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
             else:
                 # Route the query based on category
                 new_message = route_by_category(request.form['prompt'], category)
@@ -224,63 +224,7 @@ def index():
 
         return jsonify({"history": session['history']})
 
-    return render_template("index.html", history=session['history'])
-
-    # Initialize history in session if it doesn't exist
-    if 'history' not in session:
-        session['history'] = []
-
-    if request.method == "POST":
-        # Append user's query to history
-        session['history'].append({
-            "message": request.form['prompt'],
-            "is_user": True
-    })
-
-        # Classify the intent
-        category = intent_classifier(request.form['prompt'])
-
-        # Initialize the assistant's message variable
-        assistant_message = ""
-
-        if category == "2":
-            # For category 2 (Appointment handler), set the assistant message as the buttons HTML
-            assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun/05</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun/05\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun/06</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun/06\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun/06\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun/07</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun/07\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
-        else:        
-
-            # Route the query based on category
-            new_message = route_by_category(request.form['prompt'], category)
-
-            # Construct messages from chat history
-            messages = construct_messages(session['history'])
-
-            # Add the new_message to the list of messages before sending it to the API
-            messages.append(new_message)
-
-            # Ensure total tokens do not exceed model's limit
-            messages = ensure_fit_tokens(messages)
-
-            # Call the Chat Completions API with the messages
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=messages
-            )
-
-            # Extract the assistant's message from the response
-            assistant_message = response['choices'][0]['message']['content']
-
-        # Append assistant's message to history
-        session['history'].append({
-            "message": assistant_message,
-            "is_user": False
-        })
-
-        # Save changes to session
-        session.modified = True
-
-        return jsonify({"history": session['history']})
-
-    return render_template("index.html", history=session['history'])
+    return render_template("bot.html", history=session['history'])
 
 @app.route("/get_history", methods=["GET"])
 def get_history():
@@ -317,14 +261,14 @@ LOCATION:Online
 END:VEVENT
 END:VCALENDAR
 """
-    with open(f"event_folder/appointment_{date}_{time_start}.ics", 'w') as ics_file:
+    with open(f"downloads/appointment_{date}_{time_start}.ics", 'w') as ics_file:
         ics_file.write(ics_content)
     return "Appointment confirmed and .ics file created."
 
 
-@app.route('/event_folder/<path:filename>')
+@app.route('/downloads/<path:filename>')
 def custom_static(filename):
-    return send_from_directory('./event_folder', filename)
+    return send_from_directory('./downloads', filename)
 
 
 @app.route('/scrape/<path:url>', methods=['GET'])
@@ -337,7 +281,7 @@ def scrape(url):
     except Exception as e:
         return jsonify({'message': 'An error occurred during scraping', 'error': str(e)})
 
-@app.route('/sample')
+@app.route('/')
 def sample():
     return render_template('sample.html')
 

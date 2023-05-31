@@ -1,0 +1,126 @@
+body {
+    margin: 0;
+}
+
+#user_prompt_form {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(#ffffff, #bccfcc);
+    padding: 20px 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0px;
+    flex-direction: column;
+    align-items: center;
+}
+
+#user_prompt_form input[type="submit"],
+#user_prompt_form button {
+    margin-top: 10px;
+    font-family: system-ui;
+}
+
+#user_prompt_form button {
+    margin-left: 40px;
+}
+
+#chat_history {
+    margin-bottom: 220px;
+    font-family: system-ui;
+}
+
+#typing_indicator {
+    position: fixed;
+    bottom: 150px;
+    width: 100%;
+}
+
+#scroll_down_button {
+    position: fixed;
+    bottom: 15px;
+    right: -10px;
+    display: none;
+    background-color: #afaeae;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    outline: none;
+}
+
+table {
+    border-collapse: collapse;
+    font-size: small;
+    margin-left: 0px;
+}
+
+@media screen and (max-width: 767px) {
+    table {
+        margin-left: -60px;
+    }
+}
+
+th,
+td {
+    border: 1px solid black;
+    padding: 8px;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.occupied {
+    background-color: #c82333;
+    color: white;
+    opacity: 0.5;
+}
+
+.free {
+    background-color: #28a745;
+    color: white;
+}
+
+.button {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    font-size: small;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.button-free {
+    background-color: green;
+    color: white;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    /* Color of the track */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    /* Color of the scrollbar thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+    /* Color of the scrollbar thumb on hover */
+}

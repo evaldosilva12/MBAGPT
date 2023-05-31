@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MultiBOT</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+    <h3 style="text-align: center;font-family: system-ui;">Chat with Mediz Dental</h3>
+
+    <div id="chat_history">
+        <!-- This will be populated with chat history from the JavaScript -->
+    </div>
+
+    <div id="typing_indicator" style="display: none; justify-content: center">
+        <div>
+            <img src="{{ url_for('static', filename='img/loading.gif') }}" style="height: 50px" />
+        </div>
+    </div>
+
+    <form id="user_prompt_form">
+        <textarea name="prompt" id="user_prompt" rows="4" cols="35"
+            placeholder="e.g. 'How can I make an appointment?'"></textarea>
+        <div style="display: flex;">
+            <input type="submit" value="Send" />
+            <button type="button" id="clear_history_button">Clear Chat</button>
+        </div>
+    </form>
+
+    <button id="scroll_down_button">&#8595;</button>
+
+    <script>
+        function showConfirmation(date, hour) {
+            var confirmationMessage = 'Can we proceed and confirm your appointment for the respective date and hour:\n' +
+            date + ' - ' + hour;
+            var userResponse = confirm(confirmationMessage);
+            if (userResponse) {
+                // User clicked "Yes"
+                $("#user_prompt").val("<b>Appointment:</b> " + date + ' - ' + hour);
+                $("#user_prompt_form").submit();
+
+                // Split the hour into start and end times
+                var times = hour.split(' - ');
+                var time_start = times[0].replace(':', '');
+                var time_end = times[1].replace(':', '');
+
+                // Format the date for the .ics file
+                var formatted_date = date.replace(/\//g, '');
+
+                // Send a POST request to the server
+                $.post("/confirm", { date: formatted_date, time_start: time_start, time_end: time_end });
+                alert("Appointment confirmed! Thank you.");
+
+            } else {
+                // User clicked "No" or closed the alert box
+                alert("The appointment was not scheduled.");
+            }
+        }
+
+        function renderChatHistory(history) {
+            var chat_history = document.getElementById("chat_history");
+            chat_history.innerHTML = "";
+
+            // for each message, add it to the chat container
+            for (var i = 0; i < history.length; i++) {
+                var item = history[i];
+                let message_template;
+
+                if (item.is_user) {
+                    message_template = `
+                        <div style='background-color: rgb(251 251 251);padding: 10px;margin-bottom: 10px;display: flex;border-top: 1px solid rgb(233 232 232);border-bottom: 1px solid rgb(233 232 232);align-items: center;'>
+                            <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
+                                <img src="{{ url_for('static', filename='img/user-profile.png') }}" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
+                            </div>
+                            <div style="width: 80%">
+                                $MSG
+                            </div>  
+                        </div>
+                    `;
+                } else {
+                    message_template = `
+                        <div id='bot_message' style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
+                            <div style="width: 20%; display: flex; justify-content: center">
+                                <img src="{{ url_for('static', filename='img/bot-profile.png') }}" style="max-height: 50px; max-width: 50px; border-radius: 50%" />
+                            </div>
+                            <div style="width: 80%;">
+                                $MSG
+                            </div>
+                        </div>
+                    `;
+                }
+
+                chat_history.innerHTML += message_template.replace(
+                    "$MSG",
+                    item.message
+                );
+            }
+            // Scroll to the bottom of the chat history
+            chat_history.scrollTop = chat_history.scrollHeight;
+        }
+
+        function toggleScrollDownButton() {
+            var scrollPos = $(window).scrollTop();
+            var windowHeight = $(window).height();
+            if (scrollPos + windowHeight < $(document).height() - 80) {
+                $("#scroll_down_button").fadeIn();
+            } else {
+                $("#scroll_down_button").fadeOut();
+            }
+        }
+
+        $(document).ready(function () {
+            $("#user_prompt_form").on("submit", function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/bot",
+                    data: $(this).serialize(),
+                    beforeSend: function () {
+                        $("#typing_indicator").fadeIn();
+                        $("#typing_indicator").css("display", "flex");
+                    },
+                    complete: function () {
+                        $("#typing_indicator").css("display", "none");
+                        $("#typing_indicator").fadeOut();
+                    },
+                    success: function (data) {
+                        let chat_history = document.getElementById("chat_history");
+                        chat_history.innerHTML = "";
+                        $("#user_prompt").val("");
+
+                        data.history.forEach(function (item) {
+                            let message_template;
+
+                            if (item.is_user) {
+                                message_template = `
+                                    <div style='background-color: rgb(251 251 251);padding: 10px;margin-bottom: 10px;display: flex;border-top: 1px solid rgb(233 232 232);border-bottom: 1px solid rgb(233 232 232);align-items: center;'>
+                                        <div style="width: 20%; margin-left: auto; display: flex; justify-content: center;">
+                                            <img src="{{ url_for('static', filename='img/user-profile.png') }}" style="max-width: 50px; max-height: 50px; float: right; border-radius: 50%;">
+                                        </div>  
+                                        <div style="width: 80%">
+                                            $MSG
+                                        </div>  
+                                    </div>
+                                `;
+                            } else {
+                                message_template = `
+                                    <div id='bot_message' style='background-color: #FFFFFF; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex'>
+                                        <div style="width: 20%; display: flex; justify-content: center">
+                                            <img src="{{ url_for('static', filename='img/bot-profile.png') }}" style="max-height: 50px; max-width: 50px; border-radius: 50%" />
+                                        </div>
+                                        <div style="width: 80%;">
+                                            $MSG
+                                        </div>
+                                    </div>
+                                `;
+                            }
+
+                            chat_history.innerHTML += message_template.replace(
+                                "$MSG",
+                                item.message
+                            );
+                        });
+
+                        var scrollPos = $("body").height() - ($(window).height() - 240);
+                        $("html, body").animate({ scrollTop: scrollPos }, 1000);
+                    },
+                });
+            });
+            $("#clear_history_button").on("click", function () {
+                $.ajax({
+                    type: "POST",
+                    url: "/clear_history",
+                    success: function (data) {
+                        if (data.success) {
+                            $("#chat_history").empty();
+                            location.reload();
+                        }
+                    },
+                });
+            });
+
+            $.ajax({
+                url: "/get_history",
+                type: "GET",
+                success: function (response) {
+                    // If the server's chat history is empty, add an initial bot message
+                    if (response.history.length === 0) {
+                        var initialBotMessage = {
+                            is_user: false,
+                            message: "How can I help you?",
+                        };
+                        response.history.push(initialBotMessage);
+                    }
+
+                    $("#typing_indicator").fadeIn();
+                    $("#typing_indicator").css("display", "flex");
+
+                    setTimeout(function () {
+                        $("#typing_indicator").fadeOut();
+                        renderChatHistory(response.history);
+                        $("#chat_history").scrollTop($("#chat_history")[0].scrollHeight);
+                        // Scroll to the very bottom of the page
+                        var scrollPos = $("body")[0].scrollHeight;
+                        $("html, body").animate({ scrollTop: scrollPos }, 1000);
+                    }, 2000);
+                },
+                error: function (error) {
+                    console.log(error);
+                },
+            });
+
+            $(window).scroll(function () {
+                toggleScrollDownButton();
+            });
+
+            $("#scroll_down_button").click(function () {
+                $("html, body").animate({ scrollTop: $(document).height() }, 500);
+            });
+
+            // Submit form on Enter key press in textarea
+            $("#user_prompt").on("keydown", function (e) {
+                if (e.keyCode === 13 && !e.shiftKey) {
+                    e.preventDefault();
+                    $("#user_prompt_form").submit();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
