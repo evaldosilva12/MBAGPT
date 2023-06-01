@@ -34,9 +34,60 @@
     <button id="scroll_down_button">&#8595;</button>
 
     <script>
+        function formatDate(dateString) {
+            // Parse the date
+            var date = new Date(dateString + ', ' + new Date().getFullYear());
+
+            // Extract the components
+            var year = date.getFullYear();
+            var month = date.getMonth() + 1; // Months are 0-indexed in JavaScript
+            var day = date.getDate();
+
+            // Pad the month and day with zeros if necessary
+            month = month < 10 ? '0' + month : month;
+            day = day < 10 ? '0' + day : day;
+
+            // Return the formatted date
+            return '' + year + month + day;
+        }     
+
+        function formatHour(hourString) {
+            // Extract the hour and AM/PM indicator
+            var match = hourString.match(/(\d+)(am|pm)?/i);
+            if (!match) {
+                // If the hour string doesn't match the expected format, return an error
+                return 'Invalid hour string: ' + hourString;
+            }
+
+            var hour = parseInt(match[1]);
+            var ampm = (match[2] || '').toLowerCase();
+
+            // If the hour is in the 12-hour format, convert it to the 24-hour format
+            if (ampm === 'pm' && hour < 12) {
+                hour += 12;
+            } else if (ampm === 'am' && hour === 12) {
+                hour = 0;
+            }
+
+            // Pad the hour with zeros if necessary
+            hour = hour < 10 ? '0' + hour : hour;
+
+            // Return the formatted hour
+            return '' + hour + '0000';
+        }
+        
+
         function showConfirmation(date, hour) {
+            // Format the date
+            var formattedDate = formatDate(date);
+            
+            var timess = hour.split(' - ');
+            var time_startt = formatHour(timess[0]);
+            var time_endd = formatHour(timess[1]);     
+
             var confirmationMessage = 'Can we proceed and confirm your appointment for the respective date and hour:\n' +
-            date + ' - ' + hour;
+            date + ' - ' + hour + ' - ' + formattedDate + ' - ' + time_startt + ' - ' + time_endd;
+
             var userResponse = confirm(confirmationMessage);
             if (userResponse) {
                 // User clicked "Yes"
@@ -45,11 +96,14 @@
 
                 // Split the hour into start and end times
                 var times = hour.split(' - ');
-                var time_start = times[0].replace(':', '');
-                var time_end = times[1].replace(':', '');
+                var time_start = formatHour(times[0]);
+                var time_end = formatHour(times[0]);
+
+                // Format the date
+                var formatted_date = formatDate(date);
 
                 // Format the date for the .ics file
-                var formatted_date = date.replace(/\//g, '');
+                //var formatted_date = date.replace(/\//g, '');
 
                 // Send a POST request to the server
                 $.post("/confirm", { date: formatted_date, time_start: time_start, time_end: time_end });

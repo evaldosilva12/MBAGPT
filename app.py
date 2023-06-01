@@ -12,9 +12,7 @@ from datetime import datetime
 import glob
 from flask import Flask, send_from_directory
 from scrap import scrape_webpage
-
-
-
+import time
 
 
 app = Flask(__name__)
@@ -56,10 +54,10 @@ def construct_messages(history):
 
 
 # Define handler functions for each category
-def web_handler(query):
-    print("Using WEB handler...")
-    # Get relevant documents from Web's database
-    relevant_docs = web_retriever.get_relevant_documents(query)
+def handler(query, retriever):
+    print("Using handler...")
+    # Get relevant documents from the database
+    relevant_docs = retriever.get_relevant_documents(query)
 
     # Use the provided function to prepare the context
     context = get_page_contents(relevant_docs)
@@ -68,31 +66,23 @@ def web_handler(query):
     query_with_context = human_template.format(query=query, context=context)
 
     return {"role": "user", "content": query_with_context}
+
+def web_handler(query):
+    print("Using WEB handler...")
+    return handler(query, web_retriever)
 
 def pdf_handler(query):
     print("Using PDF handler...")
-    # Get relevant documents from PDF's database
-    relevant_docs = pdf_retriever.get_relevant_documents(query)
-
-    # Use the provided function to prepare the context
-    context = get_page_contents(relevant_docs)
-
-    # Prepare the prompt for GPT-3.5-turbo with the context
-    query_with_context = human_template.format(query=query, context=context)
-
-    return {"role": "user", "content": query_with_context}
+    return handler(query, pdf_retriever)
 
 def appointment_handler(query):
     print("Using Appointment handler...")
     return {"role": "user", "content": query}
 
-
-
 def other_handler(query):
     print("Using ChatGPT handler...")
     # Return the query in the appropriate message format
     return {"role": "user", "content": query}
-
 
 # Function to route query to correct handler based on category
 def route_by_category(query, category):
@@ -171,6 +161,7 @@ def index():
 
         # Check if the prompt starts with "Appointment:"
         if request.form['prompt'].startswith("<b>Appointment:</b>"):
+                time.sleep(4)
                 # Get a list of all .ics files in the downloads directory
                 list_of_files = glob.glob('./downloads/*.ics')
                 
