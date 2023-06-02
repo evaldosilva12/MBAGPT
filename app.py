@@ -286,6 +286,26 @@ def scrape(url):
     except Exception as e:
         return jsonify({'message': 'An error occurred during scraping', 'error': str(e)})
 
+
+@app.route('/scrape_nohtml/<path:url>', methods=['GET'])
+def scrape_nohtml(url):
+    try:
+        result = scrape_webpage(url)
+        soup = BeautifulSoup(result, "html.parser")
+        text_content = soup.get_text(separator=' \\\\ ')
+        lines = text_content.split(' \\\\ ')
+        cleaned_lines = [line.strip() for line in lines if line.strip() and line.strip() != ' \\\\ ']
+        text_content = ' \\\\ '.join(cleaned_lines)
+        with open('scrapped/data.txt', 'w', encoding='utf-8') as f:
+            f.write(text_content)
+        return jsonify({'message': '-Scraping successful', 'data': 'Data written to file'})
+    except Exception as e:
+        return jsonify({'message': 'An error occurred during scraping', 'error': str(e)})
+
+
+
+
+
 @app.route('/')
 def sample():
     return render_template('sample.html')
@@ -374,12 +394,16 @@ def scrape_submit():
         result = scrape_webpage(url)
         soup = BeautifulSoup(result, "html.parser")
         # Remove all html tags and get the text content
-        text_content = soup.get_text(separator='\n')
+        #text_content = soup.get_text(separator='\n')
         # Remove multiple consecutive empty lines
-        text_content = re.sub(r'\n\s*\n', '\n\n', text_content)
+        #text_content = re.sub(r'\n\s*\n', '\n\n', text_content)
+        text_content = soup.get_text(separator=' \\\\ ')
+        lines = text_content.split(' \\\\ ')
+        cleaned_lines = [line.strip() for line in lines if line.strip() and line.strip() != ' \\\\ ']
+        text_content = ' \\\\ '.join(cleaned_lines)
 
         # Sending the cleaned content to OpenAI API
-        prompt = f"Using the content gathered from a webpage about Solorzano Spa, compile an extensive, detailed summary. Aim to make this as lengthy as possible, ensuring that the maximum amount of information from the given content is utilized. The aim is to create a text document rich in detail and useful information that can be used as a resource for addressing customer inquiries about our company. The information should be structured in a straightforward and easily understandable way, with a focus on key aspects of Solorzano Spa's operations, products, services. Make sure to include Detailed descriptions of our operations, products, and services. Remember, the more detail, the better; Information about our team: Identify any mentions of owner(s), employees, their roles, and any special qualifications or expertise they possess; Contact Information: Capture our company's phone number, email address, and physical location. Anytime you encounter information about a service we offer and its price, ensure to include it in an easily identifiable table within the document. Pay careful attention to not only the pricing but also any package deals, discounts, or special offers related to our services. This is not just a brief summary - we need to draw out as much information as possible from the content to build an expansive document about our company.\n\n{text_content}"
+        prompt = f"Using the content gathered from a webpage about Solorzano Spa, compile an extensive, detailed summary. Aim to make this as lengthy as possible, ensuring that the maximum amount of information from the given content is utilized. The aim is to create a text document rich in detail and useful information that can be used as a resource for addressing customer inquiries about our company. The information should be structured in a straightforward and easily understandable way, with a focus on key aspects of Solorzano Spa's operations, products, services. Make sure to include Detailed descriptions of our operations, products, and services. Remember, the more detail, the better; Information about our team: Identify any mentions of owner(s), employees, their roles, and any special qualifications or expertise they possess; Contact Information: Capture our company's phone number, email address, and physical location. Also try to extract a table with services and price and add it to the summary. This is not just a brief summary - we need to draw out as much information as possible from the content to build an expansive document about our company.\n\n{text_content}"
         response = openai.Completion.create(
           engine="text-davinci-003",
           prompt=prompt,
@@ -391,15 +415,15 @@ def scrape_submit():
         title = re.sub(r'\W+', '', title)
         summary_file_title = f'{title}_{actual_date}.txt'
         with open(f'docs/web/{summary_file_title}', 'w', encoding='utf-8') as f:
-            #f.write(response.choices[0].text.strip())
-            f.write(text_content)
+            f.write(response.choices[0].text.strip())
+            #f.write(text_content)
         process_files_web('./docs/web')
 
         return jsonify({
             'message': 'Scraping and summarizing successful', 
             'text_content': text_content, 
-            #'summary': response.choices[0].text.strip(),
-            'summary': text_content,
+            'summary': response.choices[0].text.strip(),
+            #'summary': text_content,
             'data': 'Data written to file'
         })
 

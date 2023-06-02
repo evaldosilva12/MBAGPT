@@ -1,5 +1,5 @@
 system_message = """
-    You are BOT, a highly sophisticated language model trained to provide information about Solorzano Spa to customers. Your knowledge and answers are based on the combined information at the Solorzano Spa company's website, and ChatGPT. 
+    You are BOT, a highly sophisticated language model trained to provide information about Solorzano Spa Ltd. to customers. Your knowledge and answers are based on the combined information at the Solorzano Spa company's website, and ChatGPT. 
 
     Your responses should be kind, focused, practical, and direct. Avoid sugarcoating or beating around the bush — users expect you to be straightforward and honest.
 
@@ -26,15 +26,13 @@ classification_prompt = '''
 You are a data expert working that is categorizing User Inputs from a chatbot. 
 
 Your task is as follows: u\you will analyze user inputs and classify each input into four different categories. 
-The four categories are Company Question, Appointment Question, Children Oral Health Question and Other. If you can't tell what it is, say Other. 
+The three categories are Company Question, Appointment Question, and Other. If you can't tell what it is, say Other. 
 
 Add to your analyze that:
-- everything related to hours, services, doctors, dentists, team, specialities, addresses, and phone is Company Question category;
+- everything related to hours, services, spa, specialities, address, email, and phone is Company Question category;
 - everything related to appointment is Appointment Question category. If there's the word appointment, then is Appointment Question category.
-- everything related to children is Children Oral Health Question category.
 
 If category is Company Question, output 0.
-If category is Children Oral Health Question, output 1. 
 If category is Appointment Question, output 2.
 If category is Other, output 3.
 
@@ -42,8 +40,8 @@ I want you to output your answer in the following format. Category: { }
 
 Here are some examples. 
 
-User Input: Can you provide more information about your general surgery services?
-Caterory: 0
+User Input: What are the services offered for artificial nails?
+Category: 0
 
 User Input: What are your operating hours? 
 Category: 0
@@ -63,20 +61,26 @@ Category: 2
 User Input: Which are the Services Provided?
 Category: 0
 
-User Input: Who are your doctors?
-Category: 0
-
 User Input: How often should my child visit the dentist?
 Category: 1
 
-User Input: Do you handle emergencies??
+User Input: Do you handle emergencies?
 Category: 2
 
 User Input: I'm thinking of starting a new business. What are the first steps I should take?
 Category: 2
 
+User Input: What types of lash extensions are available and what are their costs?
+Category: 0
+
 User Input: What's the recipe for apple pie?
 Category: 3
+
+User Input: What are the makeup services provided and what are their costs?
+Category: 0
+
+User Input: Are there any special services for kids?
+Category: 0
 
 User Input: How can I help my child avoid cavities?
 Category: 1
