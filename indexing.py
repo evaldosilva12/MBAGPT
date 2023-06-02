@@ -12,21 +12,21 @@ import streamlit as st
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # Set persist directory
-persist_directory = 'db'
+#persist_directory = 'db'
 
-web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
+#web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
 
-web_docs = web_loader.load()
+#web_docs = web_loader.load()
 
-embeddings      = OpenAIEmbeddings()
-text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
+#embeddings      = OpenAIEmbeddings()
+#text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
 
 # Split documents and generate embeddings
-web_docs_split  = text_splitter.split_documents(web_docs)
+#web_docs_split  = text_splitter.split_documents(web_docs)
 
 # Create Chroma instances and persist embeddings
-webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
-webDB.persist()
+#webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
+#webDB.persist()
 
 
 def process_files(upload_dir):
@@ -47,4 +47,26 @@ def process_files(upload_dir):
         pdfDB = Chroma.from_documents(pdf_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'pdf'))
         pdfDB.persist()
     else:
-        print(f"No files found in {'./docs/pdf/'}")        
+        print(f"No files found in {'./docs/pdf/'}")
+
+
+
+def process_files_web(upload_dir):
+    if len(os.listdir('./docs/web/')) > 0:    
+        # Set persist directory
+        persist_directory = 'db'
+
+        web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
+        web_docs = web_loader.load()
+
+        embeddings      = OpenAIEmbeddings()
+        text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
+
+        # Split documents and generate embeddings
+        web_docs_split  = text_splitter.split_documents(web_docs)
+
+        # Create Chroma instances and persist embeddings
+        webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
+        webDB.persist()
+    else:
+        print(f"No files found in {'./docs/web/'}")      

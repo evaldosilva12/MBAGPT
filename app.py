@@ -15,8 +15,14 @@ from scrap import scrape_webpage
 import time
 from werkzeug.utils import secure_filename
 from indexing import process_files
+from indexing import process_files_web
 import shutil
 from flask import send_from_directory
+from bs4 import BeautifulSoup
+import re
+import datetime
+
+
 
 
 
@@ -306,6 +312,11 @@ def list_files():
     files = [{'name': f} for f in os.listdir('./docs/pdf') if os.path.isfile(os.path.join('./docs/pdf', f))]
     return jsonify({'files': files})
 
+@app.route('/get_files_web', methods=['GET'])
+def list_files_web():
+    files = [{'name': f} for f in os.listdir('./docs/web') if os.path.isfile(os.path.join('./docs/web', f))]
+    return jsonify({'files': files})
+
 @app.route('/delete', methods=['POST'])
 def delete_file():
     file_name = request.form.get('file')
@@ -323,6 +334,22 @@ def delete_file():
 
 
 
+@app.route('/delete_web', methods=['POST'])
+def delete_file_web():
+    file_name = request.form.get('file')
+    file_path = os.path.join('./docs/web', file_name)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        # If the file exists in 'db/web' as well, remove it from there too
+        db_dir_path = './db/web'
+        if os.path.exists(db_dir_path):
+            shutil.rmtree(db_dir_path)
+        process_files_web('./docs/web')  # Run the process_files after the deletion
+
+    return jsonify({'success': 'File deleted successfully'}), 200
+
+
 @app.route("/files", methods=["GET"])
 def go():
     # Redirect to the success page after processing is complete
@@ -332,6 +359,52 @@ def go():
 @app.route('/doc/pdf/<path:filename>')
 def serve_pdf(filename):
     return send_from_directory('docs/pdf', filename, as_attachment=False)
+
+
+
+@app.route('/scrape_page', methods=['GET'])
+def scrape_page():
+    return render_template('scrape.html')
+
+@app.route('/scrape_submit', methods=['POST'])
+def scrape_submit():
+    url = request.form.get('url')
+    title = request.form.get('title')
+    try:
+        result = scrape_webpage(url)
+        soup = BeautifulSoup(result, "html.parser")
+        # Remove all html tags and get the text content
+        text_content = soup.get_text(separator='\n')
+        # Remove multiple consecutive empty lines
+        text_content = re.sub(r'\n\s*\n', '\n\n', text_content)
+
+        # Sending the cleaned content to OpenAI API
+        prompt = f"Using the content gathered from a webpage about Solorzano Spa, compile an extensive, detailed summary. Aim to make this as lengthy as possible, ensuring that the maximum amount of information from the given content is utilized. The aim is to create a text document rich in detail and useful information that can be used as a resource for addressing customer inquiries about our company. The information should be structured in a straightforward and easily understandable way, with a focus on key aspects of Solorzano Spa's operations, products, services. Make sure to include Detailed descriptions of our operations, products, and services. Remember, the more detail, the better; Information about our team: Identify any mentions of owner(s), employees, their roles, and any special qualifications or expertise they possess; Contact Information: Capture our company's phone number, email address, and physical location. Anytime you encounter information about a service we offer and its price, ensure to include it in an easily identifiable table within the document. Pay careful attention to not only the pricing but also any package deals, discounts, or special offers related to our services. This is not just a brief summary - we need to draw out as much information as possible from the content to build an expansive document about our company.\n\n{text_content}"
+        response = openai.Completion.create(
+          engine="text-davinci-003",
+          prompt=prompt,
+          max_tokens=512
+        )
+
+        # Save the response to file
+        actual_date = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        title = re.sub(r'\W+', '', title)
+        summary_file_title = f'{title}_{actual_date}.txt'
+        with open(f'docs/web/{summary_file_title}', 'w', encoding='utf-8') as f:
+            #f.write(response.choices[0].text.strip())
+            f.write(text_content)
+        process_files_web('./docs/web')
+
+        return jsonify({
+            'message': 'Scraping and summarizing successful', 
+            'text_content': text_content, 
+            #'summary': response.choices[0].text.strip(),
+            'summary': text_content,
+            'data': 'Data written to file'
+        })
+
+    except Exception as e:
+        return jsonify({'message': 'An error occurred', 'error': str(e)})
 
 
 
