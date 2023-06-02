@@ -14,22 +14,37 @@ os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 # Set persist directory
 persist_directory = 'db'
 
-pdf_loader  = DirectoryLoader('./docs/pdf/', glob="*.pdf")
 web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
 
-pdf_docs = pdf_loader.load()
 web_docs = web_loader.load()
 
 embeddings      = OpenAIEmbeddings()
 text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
 
 # Split documents and generate embeddings
-pdf_docs_split  = text_splitter.split_documents(pdf_docs)
 web_docs_split  = text_splitter.split_documents(web_docs)
 
 # Create Chroma instances and persist embeddings
-pdfDB = Chroma.from_documents(pdf_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'pdf'))
-pdfDB.persist()
-
 webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
 webDB.persist()
+
+
+def process_files(upload_dir):
+    if len(os.listdir('./docs/pdf/')) > 0:    
+        # Set persist directory
+        persist_directory = 'db'
+
+        pdf_loader  = DirectoryLoader('./docs/pdf/', glob="*.pdf")
+        pdf_docs = pdf_loader.load()
+
+        embeddings      = OpenAIEmbeddings()
+        text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
+
+        # Split documents and generate embeddings
+        pdf_docs_split  = text_splitter.split_documents(pdf_docs)
+
+        # Create Chroma instances and persist embeddings
+        pdfDB = Chroma.from_documents(pdf_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'pdf'))
+        pdfDB.persist()
+    else:
+        print(f"No files found in {'./docs/pdf/'}")        

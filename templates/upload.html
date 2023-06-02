@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>File Upload</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        form {
+            text-align: center;
+            margin: 40px auto;
+        }
+
+        .file-upload {
+            margin-bottom: 20px;
+        }
+
+        .file-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #file_list {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        td.actions {
+            white-space: nowrap;
+        }
+
+        td.actions a {
+            margin: 0 10px;
+        }
+
+        .loading-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+
+        .loading-container img {
+            max-height: 70px;
+        }
+
+        .success-message {
+            text-align: center;
+            margin-top: 20px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .delete-message {
+            text-align: center;
+            margin-top: 20px;
+            background-color: #e5c2c2;
+            color: #4e1212;
+            border: 1px solid #e5c2c2;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        #file_label {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #file_label:hover {
+            background-color: #ebebeb;
+        }
+
+        @media only screen and (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            th,
+            td {
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>File Upload</h1>
+
+        <div class="file-upload">
+            <form id="upload_form" enctype="multipart/form-data">
+                <input type="file" name="file" id="file_input" multiple accept=".pdf,.doc,.docx">
+                <label for="file_input" id="file_label">Select file(s)</label>
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+
+        <div class="loading-container" id="loading" style="display: none;">
+            <img src="{{ url_for('static', filename='img/loading.gif') }}" />
+        </div>
+
+        <div class="success-message" id="success_message" style="display: none;">
+            File(s) uploaded successfully!
+        </div>
+
+        <div class="delete-message" id="delete_message" style="display: none;">
+            File(s) deleted successfully!
+        </div>
+
+        <div id="file_list">
+            <!-- The list of files will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#upload_form').on('submit', function (e) {
+                e.preventDefault();
+
+                // Show the loading animation
+                $('#loading').fadeIn('slow');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/process_pdf',
+                    data: new FormData(this),
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    success: function (data) {
+                        // Hide the loading animation
+                        $('#loading').fadeOut('slow');
+
+                        // Show the success message
+                        $('#success_message').fadeIn('slow');
+
+                        // Hide the success message after 5 seconds
+                        setTimeout(function () {
+                            $('#success_message').fadeOut('slow');
+                        }, 5000);
+
+                        // Reset the input field
+                        $('#upload_form')[0].reset();
+
+                        // Refresh the file list
+                        loadFiles();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        // Hide the loading animation
+                        $('#loading').fadeOut('slow');
+
+                        // Log the error to the console
+                        console.error('ERRORS: ' + textStatus);
+                    },
+                });
+            });
+
+            function loadFiles() {
+                $.ajax({
+                    url: '/get_files',
+                    success: function (data) {
+                        var file_list = $('#file_list');
+                        file_list.empty();
+
+                        var table = $('<table>');
+                        var tableHeader = $('<tr>');
+                        var headers = ['Name', 'Actions'];
+
+                        $.each(headers, function (_, header) {
+                            tableHeader.append($('<th>').text(header));
+                        });
+
+                        table.append(tableHeader);
+
+                        if (data.files.length === 0) {
+                            var noFilesRow = $('<tr>');
+                            var noFilesMessage = $('<td colspan="2">').text('No files found.');
+                            noFilesRow.append(noFilesMessage);
+                            table.append(noFilesRow);
+                        } else {
+                            $.each(data.files, function (_, file) {
+                                var fileRow = $('<tr>');
+                                var fileName = $('<td>').text(file.name);
+                                var fileActions = $('<td>').addClass('actions');
+                                var viewLink = $('<a>')
+                                    .attr('href', '/doc/pdf/' + file.name)
+                                    .attr('target', '_blank')
+                                    .html('<i class="fa fa-eye"></i>');
+                                var deleteLink = $('<a>')
+                                    .attr('href', '#')
+                                    .on('click', function (e) {
+                                        e.preventDefault();
+                                        deleteFile(file.name);
+                                    })
+                                    .html('<i class="fa fa-trash"></i>');
+
+                                fileActions.append(viewLink, deleteLink);
+                                fileRow.append(fileName, fileActions);
+                                table.append(fileRow);
+                            });
+                        }
+                        file_list.append(table);
+                    },
+                });
+            }
+
+            function deleteFile(file_name) {
+                $('#loading').show();
+                $.ajax({
+                    type: 'POST',
+                    url: '/delete',
+                    data: { file: file_name },
+                    success: function (data) {
+                        $('#loading').hide();
+                        $('#delete_message').show();
+                        setTimeout(function () {
+                            $('#delete_message').fadeOut('slow');
+                        }, 5000);
+                        loadFiles();
+                    },
+                });
+            }
+            loadFiles();
+        });
+    </script>
+</body>
+
+</html>

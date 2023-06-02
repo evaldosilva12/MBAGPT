@@ -13,6 +13,14 @@ import glob
 from flask import Flask, send_from_directory
 from scrap import scrape_webpage
 import time
+from werkzeug.utils import secure_filename
+from indexing import process_files
+import shutil
+from flask import send_from_directory
+
+
+
+
 
 
 app = Flask(__name__)
@@ -275,6 +283,57 @@ def scrape(url):
 @app.route('/')
 def sample():
     return render_template('sample.html')
+
+
+@app.route('/process_pdf', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    files = request.files.getlist('file')
+
+    for file in files:
+        if file:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join('./docs/pdf', filename)
+            file.save(file_path)
+            process_files(file_path)
+
+    return jsonify({'success': 'Files uploaded and processed successfully'}), 200
+
+@app.route('/get_files', methods=['GET'])
+def list_files():
+    files = [{'name': f} for f in os.listdir('./docs/pdf') if os.path.isfile(os.path.join('./docs/pdf', f))]
+    return jsonify({'files': files})
+
+@app.route('/delete', methods=['POST'])
+def delete_file():
+    file_name = request.form.get('file')
+    file_path = os.path.join('./docs/pdf', file_name)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        # If the file exists in 'db/pdf' as well, remove it from there too
+        db_dir_path = './db/pdf'
+        if os.path.exists(db_dir_path):
+            shutil.rmtree(db_dir_path)
+        process_files('./docs/pdf')  # Run the process_files after the deletion
+
+    return jsonify({'success': 'File deleted successfully'}), 200
+
+
+
+@app.route("/files", methods=["GET"])
+def go():
+    # Redirect to the success page after processing is complete
+    return render_template("upload.html")
+
+
+@app.route('/doc/pdf/<path:filename>')
+def serve_pdf(filename):
+    return send_from_directory('docs/pdf', filename, as_attachment=False)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

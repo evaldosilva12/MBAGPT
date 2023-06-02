@@ -86,7 +86,7 @@
             var time_endd = formatHour(timess[1]);     
 
             var confirmationMessage = 'Can we proceed and confirm your appointment for the respective date and hour:\n' +
-            date + ' - ' + hour + ' - ' + formattedDate + ' - ' + time_startt + ' - ' + time_endd;
+            date + ' - ' + hour ;
 
             var userResponse = confirm(confirmationMessage);
             if (userResponse) {
@@ -101,9 +101,6 @@
 
                 // Format the date
                 var formatted_date = formatDate(date);
-
-                // Format the date for the .ics file
-                //var formatted_date = date.replace(/\//g, '');
 
                 // Send a POST request to the server
                 $.post("/confirm", { date: formatted_date, time_start: time_start, time_end: time_end });
