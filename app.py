@@ -20,7 +20,6 @@ import shutil
 from flask import send_from_directory
 from bs4 import BeautifulSoup
 import re
-import datetime
 
 
 app = Flask(__name__)
@@ -431,6 +430,11 @@ def services():
     # Redirect to the success page after processing is complete
     return render_template("services.html")
 
+
+@app.route("/ai", methods=["GET"])
+def ai():
+    # Redirect to the success page after processing is complete
+    return render_template("ai.html")
 
 
 if __name__ == "__main__":
