@@ -23,12 +23,6 @@ import re
 import datetime
 
 
-
-
-
-
-
-
 app = Flask(__name__)
 
 # Set the secret key to sign the session cookie and use the filesystem session interface
@@ -143,7 +137,7 @@ def generate_response():
 
         # Call the Chat Completions API with the messages
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=messages
         )
 
@@ -195,7 +189,7 @@ def index():
 
             if category == "2":
                 # For category 2 (Appointment handler), set the assistant message as the buttons HTML
-                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun 05</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun 05\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 06</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun 06\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun 06\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 07</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun 07\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
+                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun 12</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 13</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun 13\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun 13\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 14</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
             else:
                 # Route the query based on category
                 new_message = route_by_category(request.form['prompt'], category)
@@ -211,7 +205,7 @@ def index():
 
                 # Call the Chat Completions API with the messages
                 response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4",
                     messages=messages
                 )
 
@@ -280,7 +274,7 @@ def custom_static(filename):
 def scrape(url):
     try:
         result = scrape_webpage(url)
-        with open('scrapped/data.txt', 'w') as f:
+        with open('scrapped/data.txt', 'w', encoding='utf-8') as f:
             f.write(result)
         return jsonify({'message': 'Scraping successful', 'data': 'Data written to file'})
     except Exception as e:
@@ -403,11 +397,11 @@ def scrape_submit():
         text_content = ' \\\\ '.join(cleaned_lines)
 
         # Sending the cleaned content to OpenAI API
-        prompt = f"Using the content gathered from a webpage about Solorzano Spa, compile an extensive, detailed summary. Aim to make this as lengthy as possible, ensuring that the maximum amount of information from the given content is utilized. The aim is to create a text document rich in detail and useful information that can be used as a resource for addressing customer inquiries about our company. The information should be structured in a straightforward and easily understandable way, with a focus on key aspects of Solorzano Spa's operations, products, services. Make sure to include Detailed descriptions of our operations, products, and services. Remember, the more detail, the better; Information about our team: Identify any mentions of owner(s), employees, their roles, and any special qualifications or expertise they possess; Contact Information: Capture our company's phone number, email address, and physical location. If there's a table with services and price, then try to extract and add it to the summary. If there's no price on page content, then do not try to add prices. This is not just a brief summary - we need to draw out as much information as possible from the content to build an expansive document about our company.\n\n{text_content}"
+        prompt = f"Using the content gathered from a webpage about Solorzano Spa, compile an extensive, detailed summary. Aim to make this as lengthy as possible, ensuring that the maximum amount of information from the given content is utilized. The aim is to create a text document rich in detail and useful information that can be used as a resource for addressing customer inquiries about our company. The information should be structured in a straightforward and easily understandable way, with a focus on key aspects of Solorzano Spa's operations, products, and services. Make sure to include detailed descriptions of our services. Remember, the more detail, the better; Identify any mentions of owner, employees, their roles, and any special qualifications or expertise they possess; Capture our company's phone number, email address, and physical location. If there is a table detailing services and prices, extract this information and format it as a table to include in the summary. However, if there are no prices listed on the webpage content, then omit the addition of prices. This is not just a brief summary - we need to draw out as much information as possible from the content to build an expansive document about our company.\n\n{text_content}"
         response = openai.Completion.create(
           engine="text-davinci-003",
           prompt=prompt,
-          max_tokens=512
+          max_tokens=1024
         )
 
         # Save the response to file
@@ -429,6 +423,13 @@ def scrape_submit():
 
     except Exception as e:
         return jsonify({'message': 'An error occurred', 'error': str(e)})
+
+
+
+@app.route("/services", methods=["GET"])
+def services():
+    # Redirect to the success page after processing is complete
+    return render_template("services.html")
 
 
 

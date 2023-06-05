@@ -57,7 +57,7 @@ def semantic_search(query, **kwargs):
 def intent_classifier(user_prompt):
     prompt = classification_prompt.replace("$PROMPT", user_prompt)
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {"role": "user", "content": prompt}
         ],
@@ -71,13 +71,13 @@ def intent_classifier(user_prompt):
         return "No category found"
 
 
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
+def num_tokens_from_messages(messages, model="gpt-4"):
   """Returns the number of tokens used by a list of messages."""
   try:
       encoding = tiktoken.encoding_for_model(model)
   except KeyError:
       encoding = tiktoken.get_encoding("cl100k_base")
-  if model == "gpt-3.5-turbo":  # note: future models may deviate from this
+  if model == "gpt-4":  # note: future models may deviate from this
       num_tokens = 0
       for message in messages:
           num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
