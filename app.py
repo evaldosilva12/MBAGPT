@@ -149,8 +149,13 @@ def generate_response():
         "is_user": False
     })
 
+def validate_email(email):
+    if '@' in email and '.' in email:
+        return True
+    return False
 
 @app.route("/bot", methods=["GET", "POST"])
+
 def index():
     # Initialize history in session if it doesn't exist
     if 'history' not in session:
@@ -166,21 +171,64 @@ def index():
         # Initialize the assistant's message variable
         assistant_message = ""
 
-        # Check if the prompt starts with "Appointment:"
-        if request.form['prompt'].startswith("<b>Appointment:</b>"):
-                time.sleep(4)
-                # Get a list of all .ics files in the downloads directory
-                list_of_files = glob.glob('./downloads/*.ics')
-                
-                # Get the most recently created file
-                latest_file = max(list_of_files, key=os.path.getctime)
-                
-                # Now you can use 'latest_file' to do whatever you need to do
-                # For example, you can send it as a download link in your response
-                download_link = request.url_root + latest_file
-                
-                # If it does, set the assistant's message accordingly
-                assistant_message = f"Hey, thanks for setting up your appointment! ✅<br><br>You can grab your appointment file (.ics) by clicking <a href='{download_link}'>here</a> 📅.<br><br>Need a hand with anything else? Just let me know!"
+        def parse_date_and_time_from_message(message):
+            date_pattern = r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|(?:Nov|Dec)(?:ember)?)\b \d{1,2}'
+            time_pattern = r'\b(?:1[0-2]|0?[1-9]):?(?:00)?(?:am|pm)? - (?:1[0-2]|0?[1-9]):?(?:00)?(?:am|pm)?\b'
+            
+            date = re.search(date_pattern, message)
+            time = re.search(time_pattern, message)
+
+            if date is not None and time is not None:
+                return date.group(), time.group()
+            else:
+                return None, None
+
+        # Check if the prompt starts with ...
+        if request.form['prompt'].startswith("Book appointment for "):
+            date, time = parse_date_and_time_from_message(request.form['prompt'])
+            if date is not None and time is not None:
+                session['appointment_date'] = date
+                session['appointment_time'] = time
+                assistant_message = f"Would you like to confirm your appointment for:<br><br>📅 <b>{date}, {time}</b>?<br><br>Please type 'yes' to confirm or 'no' to cancel."
+                session['confirming_appointment'] = True
+
+        elif request.form['prompt'].lower() == 'yes' and session.get('confirming_appointment', False):
+            date = session.get('appointment_date')
+            time = session.get('appointment_time')
+            if date is not None and time is not None:
+                confirm_appointment(date, time)
+                assistant_message = f"✅ Your appointment has been confirmed for <b>{date}, {time}</b>.<br><br>Could you please provide your email for further communication?"
+                session['asking_for_details'] = 'email'  # set session to track that we're expecting an email next
+                # We're not clearing 'confirming_appointment' yet as we're not fully done with the confirmation process.
+
+        elif session.get('asking_for_details') == 'email':
+            email = request.form['prompt']
+            if validate_email(email):  # assuming you have a validate_email() function
+                session['email'] = email
+                assistant_message = "Thank you. Could you please provide your name?"
+                session['asking_for_details'] = 'name'  # now we're expecting a name next
+            else:
+                assistant_message = "This doesn't seem to be a valid email. Could you please check and provide again?"
+
+        elif session.get('asking_for_details') == 'name':
+            name = request.form['prompt']
+            # You can add a name validation step here if needed
+            session['name'] = name
+            assistant_message = "Thank you. I'll send the confirmation by email."
+            # now we're done with the confirmation process, so we can clear all related session variables
+            session.pop('appointment_date', None)
+            session.pop('appointment_time', None)
+            session.pop('confirming_appointment', None)
+            session.pop('asking_for_details', None)
+
+        elif request.form['prompt'].lower() == 'no' and session.get('confirming_appointment', False):
+            assistant_message = "Alright, your appointment has been cancelled."
+            # Clear the stored appointment date and time on cancellation
+            session.pop('appointment_date', None)
+            session.pop('appointment_time', None)
+            # Clear the confirmation tracking variable
+            session.pop('confirming_appointment', None)
+
         else:
             # If it doesn't, proceed as before
             # Classify the intent
@@ -188,7 +236,7 @@ def index():
 
             if category == "2":
                 # For category 2 (Appointment handler), set the assistant message as the buttons HTML
-                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun 12</td><td><button id='slot1' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='showConfirmation(\"Jun 12\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 13</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='showConfirmation(\"Jun 13\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='showConfirmation(\"Jun 13\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 14</td><td><button id='slot15' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='showConfirmation(\"Jun 14\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
+                assistant_message = "Check out our available spots for an appointment:<br><br><table><tr><th>Date</th><th>Available Hours</th></tr><tr><td>Jun 12</td><td><button id='slot1' class='button button-free' onclick='bookAppointment(\"Jun 12\", \"9am - 10am\")'>9am - 10am</button><button id='slot2' class='button occupied'>10am - 11am</button><button id='slot3' class='button occupied'>11am - 12pm</button><button id='slot4' class='button button-free' onclick='bookAppointment(\"Jun 12\", \"12pm - 1pm\")'>12pm - 1pm</button><button id='slot5' class='button button-free' onclick='bookAppointment(\"Jun 12\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot6' class='button occupied'>2pm - 3pm</button><button id='slot7' class='button button-free' onclick='bookAppointment(\"Jun 12\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 13</td><td><button id='slot8' class='button occupied'>9am - 10am</button><button id='slot9' class='button occupied'>10am - 11am</button><button id='slot10' class='button occupied'>11am - 12pm</button><button id='slot11' class='button occupied'>12pm - 1pm</button><button id='slot12' class='button occupied'>1pm - 2pm</button><button id='slot13' class='button button-free' onclick='bookAppointment(\"Jun 13\", \"2pm - 3pm\")'>2pm - 3pm</button><button id='slot14' class='button button-free' onclick='bookAppointment(\"Jun 13\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr><tr><td>Jun 14</td><td><button id='slot15' class='button button-free' onclick='bookAppointment(\"Jun 14\", \"9am - 10am\")'>9am - 10am</button><button id='slot16' class='button occupied'>10am - 11am</button><button id='slot17' class='button button-free' onclick='bookAppointment(\"Jun 14\", \"11am - 12pm\")'>11am - 12pm</button><button id='slot18' class='button occupied'>12pm - 1pm</button><button id='slot19' class='button button-free' onclick='bookAppointment(\"Jun 14\", \"1pm - 2pm\")'>1pm - 2pm</button><button id='slot20' class='button occupied'>2pm - 3pm</button><button id='slot21' class='button button-free' onclick='bookAppointment(\"Jun 14\", \"3pm - 4pm\")'>3pm - 4pm</button></td></tr></table>"
             else:
                 # Route the query based on category
                 new_message = route_by_category(request.form['prompt'], category)
@@ -233,16 +281,21 @@ def get_history():
 def clear_history():
     session['history'].clear()
     session.modified = True
+    session.pop('appointment_date', None)
+    session.pop('appointment_time', None)
+    session.pop('confirming_appointment', None)
+    session.pop('asking_for_details', None)
+    session.pop('email', None)
+    session.pop('name', None)
     return jsonify({"success": True})
 
 
-@app.route('/confirm', methods=['POST'])
-def confirm_appointment():
-    date = request.form.get('date')  # date in 'YYYYMMDD' format
-    time_start = request.form.get('time_start')  # time in 'HHMMSS' format
-    time_end = request.form.get('time_end')  # time in 'HHMMSS' format
+#@app.route('/confirm', methods=['POST'])
+def confirm_appointment(date, time):
+    parsed_date = datetime.strptime(date, "%b %d").strftime("%Y%m%d")  # converts "Jun 14" to "20230614"
+    parsed_time_start = datetime.strptime(time.split(" - ")[0], "%I%p").strftime("%H%M%S")  # converts "3pm" to "150000"
+    parsed_time_end = datetime.strptime(time.split(" - ")[1], "%I%p").strftime("%H%M%S")  # converts "4pm" to "160000"
 
-    # DTSTAMP is the current time in UTC
     dtstamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     
     ics_content = f"""BEGIN:VCALENDAR
@@ -251,15 +304,15 @@ PRODID:-//Your Name//Bot Appointment//EN
 BEGIN:VEVENT
 UID:{dtstamp}-123400@yourdomain.com
 DTSTAMP:{dtstamp}
-DTSTART:{date}T{time_start}Z
-DTEND:{date}T{time_end}Z
+DTSTART:{parsed_date}T{parsed_time_start}Z
+DTEND:{parsed_date}T{parsed_time_end}Z
 SUMMARY:Bot Appointment
 DESCRIPTION:This is your bot appointment.
 LOCATION:Online
 END:VEVENT
 END:VCALENDAR
 """
-    with open(f"downloads/appointment_{date}_{time_start}.ics", 'w') as ics_file:
+    with open(f"downloads/appointment_{parsed_date}_{parsed_time_start}.ics", 'w') as ics_file:
         ics_file.write(ics_content)
     return "Appointment confirmed and .ics file created."
 

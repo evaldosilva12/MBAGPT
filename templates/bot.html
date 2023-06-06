@@ -77,6 +77,33 @@
         }
         
 
+        function bookAppointment(date, slot) {
+            // Send a message to the chat as if the user had typed it
+            var message = "Book appointment for " + date + " " + slot;
+            $("#user_prompt").val(message);
+            $("#user_prompt_form").submit();
+        }
+
+        function sendMessageToChat(message, askForConfirmation = false) {
+            // Display the message in the chat
+            $("#chat").append("<p>" + message + "</p>");
+
+            // If we need to ask for confirmation, display 'Yes' and 'No' buttons
+            if (askForConfirmation) {
+                $("#chat").append(`
+                    <button class='button' onclick='confirmAppointment(\"yes\")'>Yes</button>
+                    <button class='button' onclick='confirmAppointment(\"no\")'>No</button>
+                `);
+            }
+        }  
+        
+        function confirmAppointment(response) {
+            // Send a message to the chat as if the user had typed it
+            var message = response;
+            $("#user_prompt").val(message);
+            $("#user_prompt_form").submit();
+        }        
+
         function showConfirmation(date, hour) {
             // Format the date
             var formattedDate = formatDate(date);
