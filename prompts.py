@@ -1,5 +1,5 @@
 system_message = """
-    You are Sol, a highly courteous and kind AI trained to provide comprehensive information about Solorzano Spa Ltd. to its customers. Your responses are derived from the information available on the Solorzano Spa's website, integrated with the general knowledge from ChatGPT. 
+    You are SOL, a highly courteous and kind AI assistant trained to provide comprehensive information about Solorzano Spa Ltd. to its customers. Your responses are derived from the information available on the Solorzano Spa's website, integrated with the general knowledge from ChatGPT. 
 
     Your responses should be kind, focused, practical, and direct. Avoid sugarcoating or beating around the bush — users expect you to be straightforward and honest.
 
@@ -30,13 +30,14 @@ classification_prompt = '''
 You are a data expert working that is categorizing User Inputs from a chatbot. 
 
 Your task is as follows: u\you will analyze user inputs and classify each input into four different categories. 
-The three categories are Company Question, Appointment Question, and Other. If you can't tell what it is, say Other. 
+The four categories are Company Question, Appointment Question, Skin Care Question, and Other. If you can't tell what it is, say Other. 
 
 Add to your analyze that:
 - everything related to hours, services, spa, specialities, address, email, and phone is Company Question category;
 - everything related to appointment is Appointment Question category. If there's the words: appointment or schedule, then is Appointment Question category.
 
 If category is Company Question, output 0.
+If category is Skin Care Question, output 1.
 If category is Appointment Question, output 2.
 If category is Other, output 3.
 
@@ -50,13 +51,13 @@ Category: 0
 User Input: What are your operating hours? 
 Category: 0
 
-User Input: How should I care for my baby's teeth?
+User Input: What are the essential steps in a basic skincare routine?
 Category: 1
 
 User Input: How can I contact you?
 Category: 0
 
-User Input: When should my child start using toothpaste?
+User Input: What's the importance of applying a moisturizer in a skincare routine?
 Category: 1
 
 User Input: Is there spots available to make an appointment?
@@ -65,7 +66,7 @@ Category: 2
 User Input: Which are the Services Provided?
 Category: 0
 
-User Input: How often should my child visit the dentist?
+User Input: Should I apply sunscreen even if I'm staying indoors?
 Category: 1
 
 User Input: Do you handle emergencies?
@@ -86,13 +87,13 @@ Category: 0
 User Input: Are there any special services for kids?
 Category: 0
 
-User Input: How can I help my child avoid cavities?
+User Input: How can I determine my skin type?
 Category: 1
 
 User Input: How can I make an appointment?
 Category: 2
 
-User Input: What are some healthy snacks that promote good oral health in children?
+User Input: What does exfoliation do for the skin?
 Category: 1
 
 User Input: How does the moon affect the tides?

@@ -136,7 +136,7 @@ def generate_response():
 
         # Call the Chat Completions API with the messages
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=messages
         )
 
@@ -204,7 +204,7 @@ def index():
 
                 # Call the Chat Completions API with the messages
                 response = openai.ChatCompletion.create(
-                    model="gpt-4",
+                    model="gpt-3.5-turbo",
                     messages=messages
                 )
 
@@ -301,7 +301,7 @@ def scrape_nohtml(url):
 
 @app.route('/')
 def sample():
-    return render_template('sample.html')
+    return render_template('services.html')
 
 
 @app.route('/process_pdf', methods=['POST'])
