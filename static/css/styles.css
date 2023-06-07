@@ -22,10 +22,17 @@ body {
 #user_prompt_form button {
     margin-top: 10px;
     font-family: system-ui;
+    background-color: #db8876;
+    border: 1px solid #bf7666;
+    padding: 2px 10px;
+    color: white;
+    font-weight: 700;
 }
 
 #user_prompt_form button {
     margin-left: 40px;
+    background-color: #c1b193;
+    border: 1px solid #ad9e83;
 }
 
 #chat_history {
@@ -59,9 +66,22 @@ table {
     margin-left: 0px;
 }
 
+table#prices {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+table#prices td {
+    padding: 5px;
+    border: 1px solid #dfd0cd;
+}    
+
 @media screen and (max-width: 767px) {
     table {
         margin-left: -60px;
+    }
+    table#prices {
+        margin-left: 0px;
     }
 }
 

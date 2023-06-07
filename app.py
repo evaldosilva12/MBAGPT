@@ -197,7 +197,7 @@ def index():
             time = session.get('appointment_time')
             if date is not None and time is not None:
                 confirm_appointment(date, time)
-                assistant_message = f"✅ Your appointment has been confirmed for <b>{date}, {time}</b>.<br><br>Could you please provide your email for further communication?"
+                assistant_message = f"✅ Your appointment has been confirmed for <b>{date}, {time}</b>.<br><br>Could you please provide your email? I need it to send you the confirmation."
                 session['asking_for_details'] = 'email'  # set session to track that we're expecting an email next
                 # We're not clearing 'confirming_appointment' yet as we're not fully done with the confirmation process.
 
@@ -208,7 +208,12 @@ def index():
                 assistant_message = "Thank you. Could you please provide your name?"
                 session['asking_for_details'] = 'name'  # now we're expecting a name next
             else:
-                assistant_message = "This doesn't seem to be a valid email. Could you please check and provide again?"
+                promptif = request.form['prompt'].lower()
+                if "no" in promptif or "cancel" in promptif:
+                    assistant_message = "OK. If you don't want to provide it, just click on the Clear Chat button to start over. No worries though, your appointment is already scheduled."
+                else:
+                    assistant_message = "This doesn't seem to be a valid email. Could you please check and provide again?<br><br><small><i>If you don't want to provide it, just click on the Clear Chat button to start over. No worries though, your appointment is already scheduled.</i></small>"
+
 
         elif session.get('asking_for_details') == 'name':
             name = request.form['prompt']
@@ -222,7 +227,7 @@ def index():
             session.pop('asking_for_details', None)
 
         elif request.form['prompt'].lower() == 'no' and session.get('confirming_appointment', False):
-            assistant_message = "Alright, your appointment has been cancelled."
+            assistant_message = "Alright,  your appointment has not been scheduled.<br><br>If you would like to view our available time slots once more, please inform me."
             # Clear the stored appointment date and time on cancellation
             session.pop('appointment_date', None)
             session.pop('appointment_time', None)
