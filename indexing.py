@@ -8,25 +8,27 @@ from langchain.llms import OpenAI
 from langchain.chains import ConversationalRetrievalChain
 import streamlit as st
 
-
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 # Set persist directory
-persist_directory = 'db'
+#persist_directory = 'db'
 
-web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
-web_docs = web_loader.load()
+#web_loader  = DirectoryLoader('./docs/web/', glob="*.txt")
+#web_docs = web_loader.load()
 
-embeddings      = OpenAIEmbeddings()
-text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
+#embeddings      = OpenAIEmbeddings()
+#text_splitter   = CharacterTextSplitter(chunk_size=1024, chunk_overlap=8)
 
 # Split documents and generate embeddings
-web_docs_split  = text_splitter.split_documents(web_docs)
+#web_docs_split  = text_splitter.split_documents(web_docs)
+
+# Check if vector databases already exist
+#web_db_path = os.path.join(persist_directory, 'web')
 
 # Create Chroma instances and persist embeddings
-webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
-webDB.persist()
-
+#if not os.path.exists(web_db_path):
+#webDB = Chroma.from_documents(web_docs_split, embeddings, persist_directory=os.path.join(persist_directory, 'web'))
+#webDB.persist()
 
 def process_files(upload_dir):
     if len(os.listdir('./docs/pdf/')) > 0:    

@@ -4,7 +4,7 @@ from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from utils import intent_classifier, semantic_search, ensure_fit_tokens, get_page_contents
 from prompts import human_template, system_message
-from render import user_msg_container_html_template, bot_msg_container_html_template
+#from render import user_msg_container_html_template, bot_msg_container_html_template
 import openai
 import streamlit as st
 import os
@@ -21,7 +21,6 @@ from flask import send_from_directory
 from bs4 import BeautifulSoup
 import re
 
-
 app = Flask(__name__)
 
 # Set the secret key to sign the session cookie and use the filesystem session interface
@@ -31,7 +30,6 @@ Session(app)
 
 # Set OpenAI API key
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-
 
 # Initialize embeddings
 embeddings = OpenAIEmbeddings()
@@ -352,9 +350,6 @@ def scrape_nohtml(url):
         return jsonify({'message': '-Scraping successful', 'data': 'Data written to file'})
     except Exception as e:
         return jsonify({'message': 'An error occurred during scraping', 'error': str(e)})
-
-
-
 
 
 @app.route('/app')
