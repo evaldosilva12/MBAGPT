@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Success</title>
+</head>
+<body>
+    <h1>Success Page</h1>
+    
+    <script>
+		if (sessionStorage.getItem('pinValidated') !== 'true') {
+			window.location.href = '/';
+        } else {
+            // Clear the entered PIN from the local storage
+            sessionStorage.removeItem('pinValidated');
+        }
+    </script>
+</body>
+</html>

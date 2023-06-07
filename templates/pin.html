@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter PIN</title>
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.content {
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.pin-container {
+    display: inline-block;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.pin-container input {
+    width: 150px;
+    height: 30px;
+    margin-bottom: 10px;
+    padding: 5px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.key {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 18px;
+    height: 50px;
+}
+
+.key:hover {
+    background-color: #ccc;
+}
+
+.key:active {
+    background-color: #999;
+    color: #fff;
+}
+
+.hidden {
+    display: none;
+}
+
+#error-message {
+    color: red;
+    margin-top: 10px;
+}
+
+
+</style>	
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>Enter your PIN</h1>
+            <div class="pin-container">
+                <input type="password" id="pin-input" readonly>
+                <div class="keypad">
+                    <div class="key" onclick="appendToPin('1')">1</div>
+                    <div class="key" onclick="appendToPin('2')">2</div>
+                    <div class="key" onclick="appendToPin('3')">3</div>
+                    <div class="key" onclick="appendToPin('4')">4</div>
+                    <div class="key" onclick="appendToPin('5')">5</div>
+                    <div class="key" onclick="appendToPin('6')">6</div>
+                    <div class="key" onclick="appendToPin('7')">7</div>
+                    <div class="key" onclick="appendToPin('8')">8</div>
+                    <div class="key" onclick="appendToPin('9')">9</div>
+                    <div class="key" onclick="clearPin()">C</div>
+                    <div class="key" onclick="appendToPin('0')">0</div>
+                    <div class="key" onclick="deleteLastDigit()">&lt;</div>
+                </div>
+            </div>
+            <div id="error-message" class="hidden">Invalid PIN entered. Please try again.</div>
+        </div>
+    </div>
+    
+    <script>
+		var pinInput = document.getElementById('pin-input');
+
+		function appendToPin(digit) {
+			pinInput.value += digit;
+
+			if (pinInput.value.length === 4) {
+				checkPIN(pinInput.value);
+			}
+		}
+
+		function clearPin() {
+			pinInput.value = '';
+		}
+
+		function deleteLastDigit() {
+			pinInput.value = pinInput.value.slice(0, -1);
+		}
+
+		function checkPIN(pin) {
+			var correctPIN = '9089';
+
+			if (pin === correctPIN) {
+		        sessionStorage.setItem('pinValidated', 'true');
+				window.location.href = '/sucesso';
+			} else {
+				showErrorMessage();
+				resetPinInput();
+			}
+		}
+
+		function showErrorMessage() {
+			var errorMessage = document.getElementById('error-message');
+			errorMessage.classList.remove('hidden');
+			setTimeout(function() {
+				errorMessage.classList.add('hidden');
+			}, 2000);
+		}
+
+		function resetPinInput() {
+			clearPin();
+			pinInput.blur();
+			pinInput.focus();
+		}
+
+		document.addEventListener('keydown', function(event) {
+			var key = event.key;
+
+			if (/[0-9]/.test(key)) {
+				appendToPin(key);
+			} else if (key === 'Backspace') {
+				deleteLastDigit();
+			}
+		});
+
+	</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, session
+from flask import Flask, request, jsonify, render_template, session, redirect
 from flask_session import Session
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
@@ -357,7 +357,7 @@ def scrape_nohtml(url):
 
 
 
-@app.route('/')
+@app.route('/app')
 def sample():
     return render_template('services.html')
 
@@ -493,6 +493,16 @@ def services():
 def ai():
     # Redirect to the success page after processing is complete
     return render_template("ai.html")
+
+@app.route("/sucesso", methods=["GET"])
+def sucesso():
+    # Redirect to the success page after processing is complete
+    return redirect("/app")
+
+@app.route("/", methods=["GET"])
+def pin():
+    # Redirect to the success page after processing is complete
+    return render_template("pin.html")
 
 
 if __name__ == "__main__":

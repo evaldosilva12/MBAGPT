@@ -3684,6 +3684,14 @@
             color: #ffffff;
         }
     </style>
+    <script>
+		if (sessionStorage.getItem('pinValidated') !== 'true') {
+			window.location.href = '/';
+        } else {
+            // Clear the entered PIN from the local storage
+            sessionStorage.removeItem('pinValidated');
+        }
+    </script>    
     <script type='text/javascript'
         src='https://solorzanospa.ca/wp-content/themes/thecraft/assets/js/html5shiv.js?ver=3.7.3'
         id='html5shiv-js'></script>
