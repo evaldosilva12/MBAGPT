@@ -20,6 +20,11 @@ import shutil
 from flask import send_from_directory
 from bs4 import BeautifulSoup
 import re
+import html
+import json
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
@@ -152,6 +157,41 @@ def validate_email(email):
         return True
     return False
 
+def strip_html_tags(text):
+    clean = re.compile('<.*?>')
+    return html.unescape(re.sub(clean, '', text))
+
+def send_email(to_address, chat_history):
+    # Compose the email
+    msg = MIMEMultipart()
+    msg['From'] = 'evaldo@908eng.com' # your email
+    msg['To'] = to_address
+    msg['Subject'] = 'Chat History'
+
+    # Convert the chat history into readable strings
+    chat_history_strs = [f"You: {strip_html_tags(chat_dict['message'])}" if chat_dict['is_user'] else f"Bot: {strip_html_tags(chat_dict['message'])}" for chat_dict in chat_history]
+
+    # Join them together with newlines
+    body_str = '\n\n\n\n'.join(chat_history_strs)
+
+    # Convert the body into a MIMEText object
+    body = MIMEText(body_str)
+    msg.attach(body)
+
+    # Send the email
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:  # using Gmail SMTP server
+            server.ehlo()  # optional, called by login()
+            server.starttls()
+            server.login('esilva12@gmail.com', 'chzgzsiojrzhqmmv')  # your Gmail and App Password
+            server.sendmail('esilva12@gmail.com', to_address, msg.as_string())
+            print('Email sent!')
+    except Exception as e:
+        print(f'Failed to send email: {e}')
+
+
+
+
 @app.route("/bot", methods=["GET", "POST"])
 
 def index():
@@ -205,6 +245,8 @@ def index():
                 session['email'] = email
                 assistant_message = "Thank you. Could you please provide your name?"
                 session['asking_for_details'] = 'name'  # now we're expecting a name next
+                send_email(email, session['history'])  # Send chat history to user's email
+
             else:
                 promptif = request.form['prompt'].lower()
                 if "no" in promptif or "cancel" in promptif:
